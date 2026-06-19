@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>앱 설치 방법</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', sans-serif; background: #faf6ee; color: #3d2b0e; padding: 20px; }
+
+  h1 { text-align: center; font-size: 1.2rem; color: #5c3d1a; padding: 20px 0 6px; }
+  .subtitle { text-align: center; font-size: 0.82rem; color: #9c7f56; margin-bottom: 28px; }
+
+  .os-section { margin-bottom: 40px; }
+  .os-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 1rem; font-weight: bold; color: #fff;
+    background: #5c3d1a; padding: 10px 16px; border-radius: 10px;
+    margin-bottom: 20px;
+  }
+
+  .steps { display: flex; flex-direction: column; gap: 20px; }
+
+  .step { display: flex; gap: 14px; align-items: flex-start; }
+  .step-num {
+    min-width: 28px; height: 28px; border-radius: 50%;
+    background: #c0853a; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: bold; margin-top: 4px;
+  }
+  .step-body { flex: 1; }
+  .step-label { font-size: 0.92rem; font-weight: bold; color: #3d2b0e; margin-bottom: 8px; }
+  .step-desc { font-size: 0.8rem; color: #7a5a2a; margin-bottom: 10px; line-height: 1.5; }
+
+  /* Phone mockup */
+  .phone {
+    width: 220px; border: 3px solid #3d2b0e; border-radius: 28px;
+    background: #fff; overflow: hidden; margin: 0 auto;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  .phone-notch {
+    background: #3d2b0e; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .phone-notch-pill { width: 60px; height: 10px; background: #1a1a1a; border-radius: 6px; }
+
+  /* Chrome UI */
+  .chrome-bar {
+    background: #f1f3f4; padding: 6px 8px;
+    display: flex; align-items: center; gap: 6px;
+    border-bottom: 1px solid #ddd;
+  }
+  .chrome-url {
+    flex: 1; background: #fff; border: 1px solid #ddd;
+    border-radius: 16px; padding: 4px 10px;
+    font-size: 0.65rem; color: #555;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chrome-dots { font-size: 1rem; color: #555; letter-spacing: -1px; font-weight: bold; padding: 0 2px; }
+
+  .screen-content {
+    background: #faf6ee; padding: 10px;
+    min-height: 120px; font-size: 0.7rem; color: #5c3d1a;
+  }
+  .screen-title { font-weight: bold; font-size: 0.75rem; margin-bottom: 6px; }
+  .fake-card {
+    background: #fff; border: 1px solid #e8dfc8; border-radius: 6px;
+    padding: 6px 8px; margin-bottom: 5px; font-size: 0.65rem; color: #3d2b0e;
+  }
+
+  /* Menu mockup */
+  .menu-overlay {
+    position: relative; background: #fff;
+    border-radius: 8px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    margin: 4px 6px;
+  }
+  .menu-item {
+    padding: 9px 14px; font-size: 0.72rem; color: #222;
+    border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px;
+  }
+  .menu-item.highlighted { background: #fff3e0; color: #c0853a; font-weight: bold; }
+  .menu-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  /* Bottom bar */
+  .chrome-bottom {
+    background: #f1f3f4; border-top: 1px solid #ddd;
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 6px 0; font-size: 1.1rem;
+  }
+
+  /* Install button mockup */
+  .install-screen { padding: 10px; background: #fff; min-height: 140px; }
+  .install-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    padding-bottom: 10px; border-bottom: 1px solid #eee;
+  }
+  .install-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #5c3d1a; display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: #c0853a;
+  }
+  .install-info { flex: 1; }
+  .install-name { font-size: 0.75rem; font-weight: bold; color: #222; }
+  .install-url { font-size: 0.62rem; color: #888; }
+  .install-btn {
+    background: #1a73e8; color: #fff; border: none;
+    border-radius: 20px; padding: 6px 14px; font-size: 0.72rem; font-weight: bold;
+  }
+  .install-desc { font-size: 0.68rem; color: #555; line-height: 1.5; margin-bottom: 12px; }
+  .install-add-btn {
+    display: block; width: 100%; background: #1a73e8; color: #fff;
+    border: none; border-radius: 6px; padding: 10px;
+    font-size: 0.8rem; font-weight: bold; text-align: center;
+  }
+
+  /* Highlight arrow */
+  .arrow-hint {
+    text-align: center; font-size: 0.75rem; color: #c0853a;
+    font-weight: bold; margin-top: 6px;
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    border: 2px solid #c0853a; border-radius: 6px;
+    background: rgba(192,133,58,0.08);
+  }
+
+  .divider { border: none; border-top: 2px dashed #e8dfc8; margin: 30px 0; }
+</style>
+</head>
+<body>
+
+<h1>📱 홈 화면에 앱 추가하기</h1>
+<p class="subtitle">요한계시록 암기카드를 앱처럼 사용하는 방법</p>
+
+<!-- Android -->
+<div class="os-section">
+  <div class="os-title">🤖 안드로이드 (크롬 브라우저)</div>
+  <div class="steps">
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-label">크롬으로 사이트 접속</div>
+        <div class="step-desc">크롬 브라우저를 열고 주소창에 링크를 입력하세요.</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="chrome-bar">
+            <span>←</span>
+            <div class="chrome-url">yeorl-hub.github.io/revelation</div>
+            <span class="chrome-dots">⋮</span>
+          </div>
+          <div class="screen-content">
+            <div class="screen-title">📖 요한계시록 암기카드 (1~22장)</div>
+            <div class="fake-card">계 1:1 — 터치하여 성구 보기 ▼</div>
+            <div class="fake-card">계 1:2 — 터치하여 성구 보기 ▼</div>
+            <div class="fake-card">계 1:3 — 터치하여 성구 보기 ▼</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-label">오른쪽 상단 점 세 개(⋮) 탭</div>
+        <div class="step-desc">주소창 오른쪽 끝에 있는 ⋮ 버튼을 누르세요.</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="chrome-bar">
+            <span>←</span>
+            <div class="chrome-url">yeorl-hub.github.io/revelation</div>
+            <div class="highlight-box"><span class="chrome-dots" style="color:#c0853a; font-size:1.1rem;">⋮</span></div>
+          </div>
+          <div class="screen-content">
+            <div class="fake-card">계 1:1 — 터치하여 성구 보기 ▼</div>
+            <div class="fake-card">계 1:2 — 터치하여 성구 보기 ▼</div>
+          </div>
+        </div>
+        <div class="arrow-hint">↑ 이 버튼을 탭!</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-label">"홈 화면에 추가" 선택</div>
+        <div class="step-desc">메뉴가 열리면 스크롤해서 "홈 화면에 추가"를 탭하세요.</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="chrome-bar">
+            <span>←</span>
+            <div class="chrome-url">yeorl-hub.github.io/revelation</div>
+            <span class="chrome-dots">⋮</span>
+          </div>
+          <div class="menu-overlay">
+            <div class="menu-item"><span class="menu-icon">⭐</span> 북마크에 추가</div>
+            <div class="menu-item"><span class="menu-icon">⬇️</span> 다운로드</div>
+            <div class="menu-item highlighted"><span class="menu-icon">📱</span> 홈 화면에 추가</div>
+            <div class="menu-item"><span class="menu-icon">🖨️</span> 인쇄</div>
+          </div>
+        </div>
+        <div class="arrow-hint">↑ 이 항목을 탭!</div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-label">"추가" 버튼 탭</div>
+        <div class="step-desc">설치 화면이 뜨면 "추가" 버튼을 탭하면 완료!</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="install-screen">
+            <div class="install-header">
+              <div class="install-icon">계</div>
+              <div class="install-info">
+                <div class="install-name">요한계시록 암기카드</div>
+                <div class="install-url">yeorl-hub.github.io</div>
+              </div>
+              <div class="highlight-box">
+                <button class="install-btn">추가</button>
+              </div>
+            </div>
+            <div class="install-desc">이 웹사이트를 홈 화면에 추가하면 앱처럼 빠르게 접근할 수 있습니다.</div>
+            <button class="install-add-btn">홈 화면에 추가</button>
+          </div>
+        </div>
+        <div class="arrow-hint">↑ "추가" 탭하면 완료!</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- iOS -->
+<div class="os-section">
+  <div class="os-title">🍎 아이폰 (사파리 브라우저)</div>
+  <div class="steps">
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-label">사파리로 사이트 접속</div>
+        <div class="step-desc">반드시 <strong>사파리</strong>로 열어야 합니다. 크롬에서는 홈 화면 추가가 안 됩니다.</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="chrome-bar" style="background:#fff;">
+            <div class="chrome-url" style="text-align:center;">yeorl-hub.github.io/revelation</div>
+          </div>
+          <div class="screen-content">
+            <div class="screen-title">📖 요한계시록 암기카드 (1~22장)</div>
+            <div class="fake-card">계 1:1 — 터치하여 성구 보기 ▼</div>
+            <div class="fake-card">계 1:2 — 터치하여 성구 보기 ▼</div>
+          </div>
+          <div class="chrome-bottom" style="background:#f9f9f9;">
+            <span>←</span><span>→</span>
+            <div class="highlight-box"><span>⬆️□</span></div>
+            <span>□□</span><span>≡</span>
+          </div>
+        </div>
+        <div class="arrow-hint">↑ 하단 가운데 공유 버튼 탭!</div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-label">"홈 화면에 추가" 선택</div>
+        <div class="step-desc">공유 메뉴가 열리면 아래로 스크롤해서 "홈 화면에 추가"를 탭하세요.</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div class="menu-overlay" style="margin-top:0; border-radius:0;">
+            <div class="menu-item"><span class="menu-icon">📋</span> 복사</div>
+            <div class="menu-item"><span class="menu-icon">🔖</span> 북마크 추가</div>
+            <div class="menu-item highlighted"><span class="menu-icon">➕</span> 홈 화면에 추가</div>
+            <div class="menu-item"><span class="menu-icon">📤</span> 공유</div>
+          </div>
+        </div>
+        <div class="arrow-hint">↑ "홈 화면에 추가" 탭!</div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-label">오른쪽 상단 "추가" 탭</div>
+        <div class="step-desc">이름 확인 후 오른쪽 상단 "추가"를 탭하면 완료!</div>
+        <div class="phone">
+          <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #eee; background:#fff;">
+            <span style="font-size:0.75rem; color:#1a73e8;">취소</span>
+            <span style="font-size:0.78rem; font-weight:bold;">홈 화면에 추가</span>
+            <div class="highlight-box" style="padding:2px 6px;">
+              <span style="font-size:0.75rem; color:#c0853a; font-weight:bold;">추가</span>
+            </div>
+          </div>
+          <div class="install-screen">
+            <div class="install-header">
+              <div class="install-icon">계</div>
+              <div class="install-info">
+                <div class="install-name">요한계시록 암기카드</div>
+                <div class="install-url">yeorl-hub.github.io</div>
+              </div>
+            </div>
+            <div class="install-desc">홈 화면에 아이콘이 추가되어 앱처럼 바로 열 수 있습니다.</div>
+          </div>
+        </div>
+        <div class="arrow-hint">↑ 오른쪽 "추가" 탭하면 완료!</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="text-align:center; padding:24px 0 10px; font-size:0.8rem; color:#9c7f56;">
+  설치 완료 후 홈 화면에서 앱 아이콘을 탭하면 바로 실행됩니다 📖
+</div>
+
+</body>
+</html>
