@@ -981,10 +981,23 @@ renderContent();
 updateStats(currentCh);
 
 // ---- TTS (구간 반복 듣기) ----
-let ttsVerses = [];   // 재생할 절 목록
-let ttsIdx    = 0;    // 현재 절 인덱스
-let ttsPaused = false;
-let ttsActive = false; // 정지 여부 판단용 플래그
+let ttsVerses  = [];
+let ttsIdx     = 0;
+let ttsPaused  = false;
+let ttsActive  = false;
+let bestVoice  = null;
+
+function loadBestVoice() {
+  const voices = speechSynthesis.getVoices();
+  const ko = voices.filter(v => v.lang.startsWith('ko'));
+  // Google 음성이 가장 자연스러움 → 우선 선택
+  bestVoice = ko.find(v => /google/i.test(v.name))
+           || ko.find(v => /premium|enhanced|neural/i.test(v.name))
+           || ko[0]
+           || null;
+}
+speechSynthesis.onvoiceschanged = loadBestVoice;
+loadBestVoice();
 
 function buildAllVerses() {
   const all = [];
@@ -1056,8 +1069,17 @@ function ttsPlay() {
   speakNext();
 }
 
+function makeUtt(text, rate) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang  = 'ko-KR';
+  u.rate  = rate;
+  u.pitch = 1.05;
+  if (bestVoice) u.voice = bestVoice;
+  return u;
+}
+
 function speakNext() {
-  if (!ttsActive) return; // 정지 후 재진입 차단
+  if (!ttsActive) return;
 
   if (ttsIdx >= ttsVerses.length) {
     if (document.getElementById('ttsLoop').checked) {
@@ -1076,20 +1098,34 @@ function speakNext() {
 
   speechSynthesis.cancel();
 
-  // 읽을 텍스트: "요한계시록 N장 N절. 성구내용"
-  const utt = new SpeechSynthesisUtterance(`요한계시록 ${verse.ch}장 ${verse.v}절. ${verse.text}`);
-  utt.lang  = 'ko-KR';
-  utt.rate  = rate;
-  utt.onend = () => {
-    if (ttsActive && !ttsPaused) { ttsIdx++; speakNext(); }
-  };
-  utt.onerror = (e) => {
-    // cancel()로 인한 중단은 무시, 그 외 오류만 다음으로 진행
-    if (ttsActive && e.error !== 'canceled' && e.error !== 'interrupted') {
-      ttsIdx++; speakNext();
+  // 1) 장절 읽기
+  const refUtt = makeUtt(`요한계시록 ${verse.ch}장 ${verse.v}절.`, rate * 0.9);
+
+  // 2) 본문을 자연스러운 단위로 분리 (마침표·쉼표·느낌표 뒤에서 끊기)
+  const chunks = verse.text
+    .split(/(?<=[,\.!?])\s*/)
+    .map(s => s.trim())
+    .filter(Boolean);
+  if (chunks.length === 0) chunks.push(verse.text);
+
+  const utts = [refUtt, ...chunks.map(c => makeUtt(c, rate))];
+
+  let ui = 0;
+  function nextUtt() {
+    if (!ttsActive) return;
+    if (ui >= utts.length) {
+      ttsIdx++;
+      speakNext();
+      return;
     }
-  };
-  speechSynthesis.speak(utt);
+    const u = utts[ui++];
+    u.onend   = nextUtt;
+    u.onerror = (e) => {
+      if (ttsActive && e.error !== 'canceled' && e.error !== 'interrupted') nextUtt();
+    };
+    speechSynthesis.speak(u);
+  }
+  nextUtt();
   setTtsState('playing');
 }
 

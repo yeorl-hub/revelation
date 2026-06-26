@@ -1,4 +1,4 @@
-const CACHE = 'revelation-v4';
+const CACHE = 'revelation-v5';
 const FILES = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
