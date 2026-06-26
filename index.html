@@ -213,11 +213,11 @@
 </div>
 
 <!-- TTS 플로팅 버튼 -->
-<button id="ttsBtn" onclick="toggleTtsPanel()" title="듣기 모드">🔊</button>
+<button id="ttsBtn" onclick="toggleTtsPanel()" title="듣기 모드">🎺</button>
 
 <!-- TTS 패널 -->
 <div id="ttsPanel">
-  <div class="tts-title">🎧 구간 반복 듣기</div>
+  <div class="tts-title">🎺 구간 반복 듣기</div>
   <div class="tts-range">
     <label>시작</label>
     <select id="ttsStartCh"></select>장
@@ -984,6 +984,7 @@ updateStats(currentCh);
 let ttsVerses = [];   // 재생할 절 목록
 let ttsIdx    = 0;    // 현재 절 인덱스
 let ttsPaused = false;
+let ttsActive = false; // 정지 여부 판단용 플래그
 
 function buildAllVerses() {
   const all = [];
@@ -1050,11 +1051,14 @@ function ttsPlay() {
     document.getElementById('ttsStatus').textContent = '⚠️ 선택한 구간에 절이 없습니다';
     return;
   }
-  ttsIdx = 0;
+  ttsIdx    = 0;
+  ttsActive = true;
   speakNext();
 }
 
 function speakNext() {
+  if (!ttsActive) return; // 정지 후 재진입 차단
+
   if (ttsIdx >= ttsVerses.length) {
     if (document.getElementById('ttsLoop').checked) {
       ttsIdx = 0;
@@ -1068,16 +1072,23 @@ function speakNext() {
   const rate  = +document.getElementById('ttsRate').value;
 
   document.getElementById('ttsStatus').textContent =
-    `▶ ${verse.ref}  (${ttsIdx + 1} / ${ttsVerses.length})\n${verse.text.substring(0, 40)}${verse.text.length > 40 ? '…' : ''}`;
+    `▶ 요한계시록 ${verse.ch}장 ${verse.v}절  (${ttsIdx + 1} / ${ttsVerses.length})\n${verse.text.substring(0, 40)}${verse.text.length > 40 ? '…' : ''}`;
 
   speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(`${verse.ref}. ${verse.text}`);
+
+  // 읽을 텍스트: "요한계시록 N장 N절. 성구내용"
+  const utt = new SpeechSynthesisUtterance(`요한계시록 ${verse.ch}장 ${verse.v}절. ${verse.text}`);
   utt.lang  = 'ko-KR';
   utt.rate  = rate;
   utt.onend = () => {
-    if (!ttsPaused) { ttsIdx++; speakNext(); }
+    if (ttsActive && !ttsPaused) { ttsIdx++; speakNext(); }
   };
-  utt.onerror = () => { ttsIdx++; speakNext(); };
+  utt.onerror = (e) => {
+    // cancel()로 인한 중단은 무시, 그 외 오류만 다음으로 진행
+    if (ttsActive && e.error !== 'canceled' && e.error !== 'interrupted') {
+      ttsIdx++; speakNext();
+    }
+  };
   speechSynthesis.speak(utt);
   setTtsState('playing');
 }
@@ -1091,11 +1102,11 @@ function ttsPause() {
 }
 
 function ttsStop() {
+  ttsActive = false;
   ttsPaused = false;
   ttsIdx    = 0;
   speechSynthesis.cancel();
   setTtsState('stopped');
-  document.getElementById('ttsBtn').classList.remove('playing');
 }
 
 function setTtsState(state) {
@@ -1109,7 +1120,7 @@ function setTtsState(state) {
     pauseBtn.disabled    = false;
     stopBtn.disabled     = false;
     ttsBtn.classList.add('playing');
-    ttsBtn.textContent   = '🔊';
+    ttsBtn.textContent   = '🎺';
   } else if (state === 'paused') {
     playBtn.textContent  = '▶ 계속';
     playBtn.disabled     = false;
@@ -1121,7 +1132,7 @@ function setTtsState(state) {
     pauseBtn.disabled    = true;
     stopBtn.disabled     = true;
     ttsBtn.classList.remove('playing');
-    ttsBtn.textContent   = '🔊';
+    ttsBtn.textContent   = '🎺';
   }
 }
 
