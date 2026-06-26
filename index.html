@@ -133,6 +133,63 @@
   }
   #pwBtn:active { background: #3d2b0e; }
   #pwError { font-size: 0.8rem; color: #c0392b; display: none; }
+
+  /* TTS 패널 */
+  #ttsBtn {
+    position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #5c3d1a; color: #fff3e0; border: 2px solid #c0853a;
+    font-size: 1.4rem; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #ttsBtn.playing { background: #c0853a; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(192,133,58,0.5)} 50%{box-shadow:0 0 0 8px rgba(192,133,58,0)} }
+
+  #ttsPanel {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+    background: #3d2b0e; color: #fff3e0;
+    border-top: 2px solid #c0853a;
+    padding: 16px 18px 24px;
+    transform: translateY(100%); transition: transform 0.3s ease;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  }
+  #ttsPanel.open { transform: translateY(0); }
+
+  .tts-title { font-size: 0.85rem; color: #e8c98a; margin-bottom: 12px; font-weight: bold; letter-spacing: 0.5px; }
+
+  .tts-range {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .tts-range label { font-size: 0.78rem; color: #c0853a; white-space: nowrap; }
+  .tts-range select {
+    background: #5c3d1a; color: #fff3e0; border: 1px solid #c0853a;
+    border-radius: 6px; padding: 5px 6px; font-size: 0.82rem;
+    font-family: inherit; cursor: pointer;
+  }
+  .tts-sep { color: #c0853a; font-weight: bold; }
+
+  .tts-status {
+    background: #5c3d1a; border-radius: 8px; padding: 8px 12px;
+    font-size: 0.8rem; color: #e8c98a; margin-bottom: 12px;
+    min-height: 36px; line-height: 1.5;
+  }
+
+  .tts-controls { display: flex; gap: 8px; }
+  .tts-ctrl {
+    flex: 1; padding: 10px 8px;
+    border: 1px solid #c0853a; border-radius: 8px;
+    background: #5c3d1a; color: #fff3e0;
+    font-size: 0.85rem; font-family: inherit; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tts-ctrl:hover { background: #7a5230; }
+  .tts-ctrl.primary { background: #c0853a; border-color: #e8a855; font-weight: bold; }
+  .tts-ctrl.primary:hover { background: #d4954a; }
+  .tts-ctrl:disabled { opacity: 0.4; cursor: default; }
+
+  .tts-option { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 0.78rem; color: #c0853a; }
+  .tts-option input[type=range] { flex: 1; accent-color: #c0853a; }
 </style>
 </head>
 <body>
@@ -153,6 +210,36 @@
 
 <div class="notice">
   ⚠️ 성구 내용은 대한성서공회 개역한글 기준으로 작성하였으나, 일부 오류가 있을 수 있습니다. 반드시 성경 원문과 대조 후 사용하세요.
+</div>
+
+<!-- TTS 플로팅 버튼 -->
+<button id="ttsBtn" onclick="toggleTtsPanel()" title="듣기 모드">🔊</button>
+
+<!-- TTS 패널 -->
+<div id="ttsPanel">
+  <div class="tts-title">🎧 구간 반복 듣기</div>
+  <div class="tts-range">
+    <label>시작</label>
+    <select id="ttsStartCh"></select>장
+    <select id="ttsStartV"></select>절
+    <span class="tts-sep">~</span>
+    <label>끝</label>
+    <select id="ttsEndCh"></select>장
+    <select id="ttsEndV"></select>절
+  </div>
+  <div class="tts-status" id="ttsStatus">구간을 설정하고 재생을 누르세요</div>
+  <div class="tts-controls">
+    <button class="tts-ctrl primary" id="ttsPlayBtn" onclick="ttsPlay()">▶ 재생</button>
+    <button class="tts-ctrl" id="ttsPauseBtn" onclick="ttsPause()" disabled>⏸ 일시정지</button>
+    <button class="tts-ctrl" id="ttsStopBtn" onclick="ttsStop()" disabled>⏹ 정지</button>
+  </div>
+  <div class="tts-option">
+    <span>속도</span>
+    <input type="range" id="ttsRate" min="0.5" max="1.5" step="0.1" value="0.85" oninput="document.getElementById('ttsRateVal').textContent=this.value+'x'">
+    <span id="ttsRateVal">0.85x</span>
+    <span style="margin-left:10px">🔁 반복</span>
+    <input type="checkbox" id="ttsLoop" checked style="accent-color:#c0853a; width:16px; height:16px;">
+  </div>
 </div>
 
 <div class="ch-nav" id="chNav"></div>
@@ -892,6 +979,158 @@ function toggleSwap(ch) {
 renderNav();
 renderContent();
 updateStats(currentCh);
+
+// ---- TTS (구간 반복 듣기) ----
+let ttsVerses = [];   // 재생할 절 목록
+let ttsIdx    = 0;    // 현재 절 인덱스
+let ttsPaused = false;
+
+function buildAllVerses() {
+  const all = [];
+  chapters.forEach(c => {
+    c.verses.forEach(v => {
+      const m = v[0].match(/계 (\d+):(\d+)/);
+      if (m) all.push({ ch: +m[1], v: +m[2], ref: v[0], text: v[1] });
+    });
+  });
+  return all;
+}
+const allVerses = buildAllVerses();
+
+function initTtsSelects() {
+  const startCh = document.getElementById('ttsStartCh');
+  const endCh   = document.getElementById('ttsEndCh');
+  chapters.forEach(c => {
+    startCh.add(new Option(c.ch, c.ch));
+    endCh.add(new Option(c.ch, c.ch));
+  });
+  endCh.value = chapters[chapters.length - 1].ch;
+  updateVerseSelect('start');
+  updateVerseSelect('end');
+  document.getElementById('ttsEndV').value =
+    chapters[chapters.length - 1].verses.length;
+}
+
+function updateVerseSelect(which) {
+  const chEl = document.getElementById(`tts${which === 'start' ? 'Start' : 'End'}Ch`);
+  const vEl  = document.getElementById(`tts${which === 'start' ? 'Start' : 'End'}V`);
+  const ch   = +chEl.value;
+  const data = chapters.find(c => c.ch === ch);
+  const prev = +vEl.value;
+  vEl.innerHTML = '';
+  data.verses.forEach((_, i) => vEl.add(new Option(i + 1, i + 1)));
+  vEl.value = Math.min(prev || 1, data.verses.length);
+}
+
+document.getElementById('ttsStartCh').onchange = () => updateVerseSelect('start');
+document.getElementById('ttsEndCh').onchange   = () => updateVerseSelect('end');
+
+function getSelectedVerses() {
+  const sCh = +document.getElementById('ttsStartCh').value;
+  const sV  = +document.getElementById('ttsStartV').value;
+  const eCh = +document.getElementById('ttsEndCh').value;
+  const eV  = +document.getElementById('ttsEndV').value;
+  return allVerses.filter(v => {
+    if (v.ch < sCh || v.ch > eCh) return false;
+    if (v.ch === sCh && v.v < sV) return false;
+    if (v.ch === eCh && v.v > eV) return false;
+    return true;
+  });
+}
+
+function ttsPlay() {
+  if (ttsPaused) {
+    ttsPaused = false;
+    speechSynthesis.resume();
+    setTtsState('playing');
+    return;
+  }
+  ttsVerses = getSelectedVerses();
+  if (ttsVerses.length === 0) {
+    document.getElementById('ttsStatus').textContent = '⚠️ 선택한 구간에 절이 없습니다';
+    return;
+  }
+  ttsIdx = 0;
+  speakNext();
+}
+
+function speakNext() {
+  if (ttsIdx >= ttsVerses.length) {
+    if (document.getElementById('ttsLoop').checked) {
+      ttsIdx = 0;
+    } else {
+      ttsStop();
+      document.getElementById('ttsStatus').textContent = '✅ 재생 완료';
+      return;
+    }
+  }
+  const verse = ttsVerses[ttsIdx];
+  const rate  = +document.getElementById('ttsRate').value;
+
+  document.getElementById('ttsStatus').textContent =
+    `▶ ${verse.ref}  (${ttsIdx + 1} / ${ttsVerses.length})\n${verse.text.substring(0, 40)}${verse.text.length > 40 ? '…' : ''}`;
+
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(`${verse.ref}. ${verse.text}`);
+  utt.lang  = 'ko-KR';
+  utt.rate  = rate;
+  utt.onend = () => {
+    if (!ttsPaused) { ttsIdx++; speakNext(); }
+  };
+  utt.onerror = () => { ttsIdx++; speakNext(); };
+  speechSynthesis.speak(utt);
+  setTtsState('playing');
+}
+
+function ttsPause() {
+  if (speechSynthesis.speaking && !speechSynthesis.paused) {
+    ttsPaused = true;
+    speechSynthesis.pause();
+    setTtsState('paused');
+  }
+}
+
+function ttsStop() {
+  ttsPaused = false;
+  ttsIdx    = 0;
+  speechSynthesis.cancel();
+  setTtsState('stopped');
+  document.getElementById('ttsBtn').classList.remove('playing');
+}
+
+function setTtsState(state) {
+  const playBtn  = document.getElementById('ttsPlayBtn');
+  const pauseBtn = document.getElementById('ttsPauseBtn');
+  const stopBtn  = document.getElementById('ttsStopBtn');
+  const ttsBtn   = document.getElementById('ttsBtn');
+  if (state === 'playing') {
+    playBtn.textContent  = '▶ 재생';
+    playBtn.disabled     = true;
+    pauseBtn.disabled    = false;
+    stopBtn.disabled     = false;
+    ttsBtn.classList.add('playing');
+    ttsBtn.textContent   = '🔊';
+  } else if (state === 'paused') {
+    playBtn.textContent  = '▶ 계속';
+    playBtn.disabled     = false;
+    pauseBtn.disabled    = true;
+    ttsBtn.classList.remove('playing');
+  } else {
+    playBtn.textContent  = '▶ 재생';
+    playBtn.disabled     = false;
+    pauseBtn.disabled    = true;
+    stopBtn.disabled     = true;
+    ttsBtn.classList.remove('playing');
+    ttsBtn.textContent   = '🔊';
+  }
+}
+
+function toggleTtsPanel() {
+  const panel = document.getElementById('ttsPanel');
+  panel.classList.toggle('open');
+}
+
+initTtsSelects();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js');
