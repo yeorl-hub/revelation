@@ -990,9 +990,10 @@ let bestVoice  = null;
 function loadBestVoice() {
   const voices = speechSynthesis.getVoices();
   const ko = voices.filter(v => v.lang.startsWith('ko'));
-  // Google 음성이 가장 자연스러움 → 우선 선택
-  bestVoice = ko.find(v => /google/i.test(v.name))
-           || ko.find(v => /premium|enhanced|neural/i.test(v.name))
+  // 선히 Online (Natural) 우선, 없으면 Google, 없으면 첫 번째 한국어 음성
+  bestVoice = ko.find(v => /선히.*natural/i.test(v.name))
+           || ko.find(v => /sunhi.*natural/i.test(v.name))
+           || ko.find(v => /google/i.test(v.name))
            || ko[0]
            || null;
 }
