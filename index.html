@@ -137,9 +137,9 @@
   /* TTS 패널 */
   #ttsBtn {
     position: fixed; bottom: 20px; right: 20px; z-index: 1000;
-    width: 52px; height: 52px; border-radius: 50%;
+    width: 64px; height: 64px; border-radius: 50%;
     background: #5c3d1a; color: #fff3e0; border: 2px solid #c0853a;
-    font-size: 1.4rem; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    font-size: 1.8rem; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
     display: flex; align-items: center; justify-content: center;
   }
   #ttsBtn.playing { background: #c0853a; animation: pulse 1.5s infinite; }
@@ -213,11 +213,11 @@
 </div>
 
 <!-- TTS 플로팅 버튼 -->
-<button id="ttsBtn" onclick="toggleTtsPanel()" title="듣기 모드">🎺</button>
+<button id="ttsBtn" onclick="toggleTtsPanel()" title="듣기 모드">🎧</button>
 
 <!-- TTS 패널 -->
 <div id="ttsPanel">
-  <div class="tts-title">🎺 구간 반복 듣기</div>
+  <div class="tts-title">🎧 구간 반복 듣기</div>
   <div class="tts-range">
     <label>시작</label>
     <select id="ttsStartCh"></select>장
@@ -1156,7 +1156,7 @@ function setTtsState(state) {
     pauseBtn.disabled    = false;
     stopBtn.disabled     = false;
     ttsBtn.classList.add('playing');
-    ttsBtn.textContent   = '🎺';
+    ttsBtn.textContent   = '🎧';
   } else if (state === 'paused') {
     playBtn.textContent  = '▶ 계속';
     playBtn.disabled     = false;
@@ -1168,7 +1168,7 @@ function setTtsState(state) {
     pauseBtn.disabled    = true;
     stopBtn.disabled     = true;
     ttsBtn.classList.remove('playing');
-    ttsBtn.textContent   = '🎺';
+    ttsBtn.textContent   = '🎧';
   }
 }
 
